@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import math
 
 def normalize_table(t):
 	return t / np.sum(t, 0)
@@ -7,6 +8,18 @@ def normalize_table(t):
 def make_random_transitions(nnotes):
 	t = np.random.random((nnotes, nnotes))
 	return normalize_table(t)
+
+def make_local_transitions(nnotes, sigma = 3.0, baseweight = 0.01):
+	base = np.random.random((nnotes, nnotes)) * baseweight
+	for idx0 in range(nnotes):
+		for idx1 in range(nnotes):
+			dx = idx1 - idx0
+			if dx != 0:
+				w = math.exp(-(sigma * sigma * dx * dx))
+			else:
+				w = 0.0
+			base[idx0, idx1] += w
+	return normalize_table(base)
 
 def weighted_arg_sample(probs):
 	val = random.uniform(0.0, 1.0)
@@ -30,7 +43,8 @@ def random_table_walk(ttable, nnotes, startidx=-1):
 	return ret
 
 def create_score(notes, length):
-	ttable = make_random_transitions(len(notes))
+	ttable = make_local_transitions(len(notes))
+	print(ttable)
 	index_score = random_table_walk(ttable, length)
 	newnotes = [notes[i] for i in index_score]
 	return newnotes

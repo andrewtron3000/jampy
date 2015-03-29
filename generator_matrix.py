@@ -111,11 +111,12 @@ def random_note():
 
 def random_motif(start_time):
 	#notes = " ".join([random_note() for i in range(10)])
-	notes = "A3 B3 D4 E4 F#4 A4 B4 D5 E5 F#5 A5 B5 D6 E6 F#6 P".split(" ")
-	score = matrixmusic.create_score(notes, 15) * 5
+	#notes = "A3 B3 D4 E4 F#4 A4 B4 D5 E5 F#5 A5 B5 D6 E6 F#6 P".split(" ")
+	notes = "C3 C#3 E3 F3 G3 G#3 B4 C4 C#4 E4 F4 G4 G#4".split(" ")
+	score = matrixmusic.create_score(notes, 15*5) * 1
 	print("Random score: " + str(score))
 
-	return Motif(start_time, 12, 0.10, score, 2.00, 1.00, random.choice(["oscil"]))
+	return Motif(start_time, 12, 0.10, score, 2.0, 1.0, random.choice(["oscil"]))
 
 
 if __name__ == "__main__":
