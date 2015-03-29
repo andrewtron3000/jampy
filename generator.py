@@ -28,14 +28,6 @@ def add_motif(instrument, req):
                                       req.motif_amplitude))
         time += req.note_duration + req.internote_delay
 
-def handle_add_oscil_motif(req):
-    global oscillator
-    return add_motif(oscillator, req)
-
-def handle_add_buzzer_motif(req):
-    global buzzer
-    return add_motif(buzzer, req)
-
 def handle_create_song(req):
     global csd, oscillator, buzzer, voice
     global song_publisher
@@ -69,20 +61,6 @@ def handle_create_song(req):
     subprocess.call(args)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class Motif(object):
     def __init__(self, motif_start_time, motif_repeat, motif_amplitude, note_bank, note_duration, internote_delay, instrument):
         self.motif_start_time = motif_start_time
@@ -92,9 +70,6 @@ class Motif(object):
         self.note_duration = note_duration
         self.internote_delay = internote_delay
         self.instrument = instrument
-
-
-
 
 
 class Request(object):
@@ -122,6 +97,26 @@ def selectInterval():
 def triggerCreate(song_name, artist, album, motifs):
     handle_create_song(Request(song_name, artist, album, motifs))
 
+def random_note():
+	bases = ["A", "B", "C", "D", "E", "F", "G"]
+	unsharpable = ["E", "B"]
+	unflatable = ["C", "F"]
+	octaves = map(str, range(2,6))
+	mods = ["", "#"]
+
+	base = random.choice(bases)
+	mods = [""]
+	if not base in unsharpable:
+		mods.append("#")
+	mod = random.choice(mods)
+	octave = random.choice(octaves)
+	return base + mod + octave
+
+def random_motif(start_time):
+	notes = " ".join([random_note() for i in range(10)])
+	print("Random Notes: " + str(notes))
+	return Motif(start_time, 12, 0.32, notes, 0.15, 0.05, random.choice(["oscil", "buzzer"]))
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
@@ -142,11 +137,12 @@ if __name__ == "__main__":
         else:
             a = 0.15
             b = 0.05
-        motifs = [ Motif(0.0, 12, 0.32, "A3 B3 D4 E4 F#4 A4 B4 D5 E5 F#5 A5 B5 D6 E6 F#6", 0.15, 0.05, selectInstrument()) ]
-        if biasedFlip(0.8):
-            motifs.append(Motif(3.0, 10, 0.32, "A3 B3 D4 E4 F#4 A4 B4 D5 E5 F#5 A5 B5 D6 E6 F#6",    a,    b, selectInstrument()))
-        if biasedFlip(0.9):
-            motifs.append(Motif(6.0,  4, 0.10, "A2 B2 D3 D3 F#3 A3 B3 D4 E4 F#4 A4 B4 D5 E5 F#5",  0.3,  0.1, selectInstrument()))
+        #motifs = [ Motif(0.0, 12, 0.32, "A3 B3 D4 E4 F#4 A4 B4 D5 E5 F#5 A5 B5 D6 E6 F#6", 0.15, 0.05, selectInstrument()) ]
+        motifs = [random_motif(i*2.0) for i in range(3)]
+        # if biasedFlip(0.8):
+        #     motifs.append(Motif(3.0, 10, 0.32, "A3 B3 D4 E4 F#4 A4 B4 D5 E5 F#5 A5 B5 D6 E6 F#6",    a,    b, selectInstrument()))
+        # if biasedFlip(0.9):
+        #     motifs.append(Motif(6.0,  4, 0.10, "A2 B2 D3 D3 F#3 A3 B3 D4 E4 F#4 A4 B4 D5 E5 F#5",  0.3,  0.1, selectInstrument()))
         triggerCreate(song_title, artist, album, motifs)
         print "Created song %s" % song_title
         time.sleep(10)
