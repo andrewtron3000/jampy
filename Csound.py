@@ -75,8 +75,42 @@ class buzz(Instrument):
                        convert_amplitude(amplitude), parse_pitch(frequency),
                        if_none(number_of_harmonics, self.number_of_harmonics))
 
+# class pluck(Instrument):
+#     def __init__(self):
+#         # todo
+
+#     def opcodes(self):
+#           iplk = 0.75
+#   kamp = 30000
+#   icps = 220
+#   kpick = 0.75
+#   krefl = 0.5
+
+#         return 'a1', 'a1 wgpluck2 iplk, kamp, icps, kpick, krefl'
+
+class voice(Instrument):
+    def __init__(self, vowel=1):
+        Instrument.__init__(self)
+        self.vowel = vowel
+
+    def opcodes(self):
+        #return 'a1', 'a1\tfmvoice\tp4, p5, p6, p7, p8, p9'
+        #return 'a1', 'a1\tfmvoice\t.5, 110, 1, 0, 0.005, 6'
+        #pgm = 'asrc\twgpluck2\t0.75, p4, p5, 0.75, 0.5\n'
+        pgm = "asrc  voice p4, p5, p6, 0.488, 0, 1, 1, 2"
+        #pgm += 'a1 reverb asrc, 1.5'
+        return 'asrc', pgm
+        #return 'a1', 'a1\twgpluck2\t0.75, 30000, 220, 0.75, 0.5'
+        #return 'apluck', 'iplk = 0.75\nkamp = 30000\nicps = 220\nkpick = 0.75\nkrefl = 0.5\napluck wgpluck2 iplk, kamp, icps, kpick, krefl'
+
+    def note(self, start, duration, frequency, amplitude = .5,
+             vowel=None, spectral_tilt=None, vibrato_depth=None, vibrato_rate=None):
+        return tabjoin('i', self.number, start, duration,
+                       convert_amplitude(amplitude * 2.0), parse_pitch(frequency),
+                       if_none(vowel, self.vowel))
+
 class fmvoice(Instrument):
-    def __init__(self, vowel=0, spectral_tilt=0, vibrato_depth=0.005, vibrato_rate=6):
+    def __init__(self, vowel=1, spectral_tilt=0, vibrato_depth=0.005, vibrato_rate=6):
         Instrument.__init__(self)
         self.vowel = vowel
         self.spectral_tilt = spectral_tilt
@@ -84,12 +118,18 @@ class fmvoice(Instrument):
         self.vibrato_rate = vibrato_rate
 
     def opcodes(self):
-        return 'a1', 'a1\tfmvoice\tp4, p5, p6, p7, p8, p9, 1, 1, 1, 1, 1'
+        #return 'a1', 'a1\tfmvoice\tp4, p5, p6, p7, p8, p9'
+        #return 'a1', 'a1\tfmvoice\t.5, 110, 1, 0, 0.005, 6'
+        pgm = 'asrc\twgpluck2\t0.75, p4, p5, 0.75, 0.5\n'
+        pgm += 'a1 reverb asrc, 1.5'
+        return 'a1', pgm
+        #return 'a1', 'a1\twgpluck2\t0.75, 30000, 220, 0.75, 0.5'
+        #return 'apluck', 'iplk = 0.75\nkamp = 30000\nicps = 220\nkpick = 0.75\nkrefl = 0.5\napluck wgpluck2 iplk, kamp, icps, kpick, krefl'
 
     def note(self, start, duration, frequency, amplitude = .5,
              vowel=None, spectral_tilt=None, vibrato_depth=None, vibrato_rate=None):
         return tabjoin('i', self.number, start, duration,
-                       convert_amplitude(amplitude), parse_pitch(frequency),
+                       convert_amplitude(amplitude * 2.0), parse_pitch(frequency),
                        if_none(vowel, self.vowel),
                        if_none(spectral_tilt, self.spectral_tilt),
                        if_none(vibrato_depth, self.vibrato_depth),
@@ -102,7 +142,7 @@ class CSD:
     def __init__(self, output_csd_filename='default.csd', render_sound=0):
         self.set_filenames(output_csd_filename)
         self.render_sound = render_sound
-        self.options = '-A -o %s' % (self.output_sound_filename)
+        self.options = '-W -o %s' % (self.output_sound_filename)
         self.instruments = []
         self.note_list = ''
         print 'Creating CSD file "%s"' % (self.output_csd_filename)
@@ -112,21 +152,26 @@ class CSD:
     def set_filenames(self, output_csd_filename):
         self.output_csd_filename = output_csd_filename
         if output_csd_filename.endswith('.csd'):
-            self.output_sound_filename = output_csd_filename[:-4] + '.aif'
+            self.output_sound_filename = output_csd_filename[:-4] + '.wav'
         else:
-            self.output_sound_filename = output_csd_filename + '.aif'
+            self.output_sound_filename = output_csd_filename + '.wav'
 
     def orchestra(self, *args):
         self.instruments += args
 
     def orchestra_definition(self):
         result = ''
+        result += "sr = 44100\n"
+        result += "kr = 4410\n"
+        result += "ksmps = 10\n" 
+        result += "nchnls = 1\n"
+
         for inst in self.instruments:
             result += inst.orchestra() + '\n'
         return string.rstrip(result)
 
     def tables(self):
-        return tabjoin('f', 1, 0, 4096, 10, 1)
+        return tabjoin('f', 1, 0, 16384, 10, 1)
 
     def score(self, *args):
         self.note_list += string.join(args, '\n') + '\n'
