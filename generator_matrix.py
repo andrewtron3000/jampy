@@ -11,6 +11,7 @@ csd = None
 oscillator = None
 buzzer = None
 voice = None
+truevoice = None
 song_publisher = None
 
 def add_motif(instrument, req):
@@ -45,7 +46,7 @@ def handle_create_song(req):
     csd_string = f.read()
     f.close()
     song_name = '%s.ogg' % req.song_name
-    args = ['oggenc', '-o', song_name, '%s.aif' % s]
+    args = ['oggenc', '-o', song_name, '%s.wav' % s]
     subprocess.call(args)
     args = ['vorbiscomment', '-a', song_name,  
             '-t', "ARTIST=%s" % req.artist,
@@ -116,7 +117,13 @@ def random_motif(start_time):
 	score = matrixmusic.create_score(notes, 15*5) * 1
 	print("Random score: " + str(score))
 
-	return Motif(start_time, 12, 0.10, score, 2.0, 1.0, random.choice(["oscil"]))
+	opts = [("voice", 1.0, 1.5), 
+			#("oscil", 1.0, 1.5),
+			("voice", 3.0, 1.5)] 
+			#("oscil", 3.0, 1.5)]
+	opt = random.choice(opts)
+
+	return Motif(start_time, 12, 0.05, score, opt[1], opt[2], opt[0])
 
 
 if __name__ == "__main__":
@@ -129,12 +136,13 @@ if __name__ == "__main__":
     global song_publisher, oscillator, buzzer, voice
     oscillator = Csound.oscil() 
     buzzer = Csound.buzz() 
-    voice = Csound.fmvoice() 
+    voice = Csound.fmvoice()
+    #voice = Csound.voice()
     for i in xrange(1, 16384):
         song_title = "song_%d" % i
 
         #motifs = [ Motif(0.0, 12, 0.32, "A3 B3 D4 E4 F#4 A4 B4 D5 E5 F#5 A5 B5 D6 E6 F#6", 0.15, 0.05, selectInstrument()) ]
-        motifs = [random_motif(i*2.0) for i in range(3)]
+        motifs = [random_motif(i*0.8) for i in range(3)]
         # if biasedFlip(0.8):
         #     motifs.append(Motif(3.0, 10, 0.32, "A3 B3 D4 E4 F#4 A4 B4 D5 E5 F#5 A5 B5 D6 E6 F#6",    a,    b, selectInstrument()))
         # if biasedFlip(0.9):
